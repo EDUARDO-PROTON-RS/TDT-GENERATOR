@@ -41,6 +41,17 @@ Base: `docs/aproveitamento-handoff-adms-v1.md`
 - Garantir que o campo Signal/Remote Point Custom ID saia **vazio (`None`)** —
   o ADMS gera o GUID; herdar o do template causa conflito.
 
+### SP-fuzzy-1 — Guard contra sigla de 1 caractere no boost literal
+- `matchers/fuzzy_match.py:31`: `boost = _BOOST_SIGLA if sigla.upper() in
+  tokens else 0.0` não tem guard de tamanho. O projeto antigo confirmou em
+  produção falso positivo de siglas `A`/`B` casando por essa via.
+- **Risco real e não hipotético**: `Pontos Padrao ADMS_v1.xlsx` tem siglas de
+  1 caractere de verdade (`N`, `S`, `P`, `Q`, `V` — neutro/potências), então o
+  boost pode disparar de um token solto na descrição.
+- Fix: `boost = _BOOST_SIGLA if len(sigla) > 1 and sigla.upper() in tokens
+  else 0.0`. Teste dedicado com descrição contendo token de 1 letra (ex.
+  "Fase A") + sigla `N`/`S` no corpus, garantindo que não ganha boost.
+
 ---
 
 ## 🟡 Revisar
