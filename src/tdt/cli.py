@@ -18,6 +18,7 @@ from tdt.auditoria import Auditoria
 from tdt.config import Config
 from tdt.dados.encoder import criar_encoder
 from tdt.pipeline import executar
+from tdt.validador_pacote import validar_pacote_tdt
 
 
 def _salvar_revisao(resultado, destino: Path) -> None:
@@ -60,6 +61,14 @@ def main(argv: list[str] | None = None) -> int:
     aud.salvar_log(out.with_suffix(".log.txt"))
     aud.salvar_json(out.with_suffix(".auditoria.json"))
     print(f"TDT: {out} | decididos={len(resultado.lista.registros)} revisão={len(resultado.revisao)}")
+
+    rel = validar_pacote_tdt(out)
+    if not rel.nativo:
+        print(
+            "AVISO: pacote NÃO-nativo — o ADMS pode recusar a importação "
+            "('Invalid TDI file format'). Reabra e salve no MS Excel antes de "
+            "importar. Detalhes: " + " ".join(rel.problemas)
+        )
     return 0
 
 
